@@ -4,7 +4,7 @@ import requests
 import os
 
 import numbers
-import math 
+import math
 import bisect
 
 from nhanesVariables import tests
@@ -18,14 +18,14 @@ import pandas as pd
 
 
 
-def getURLBase(url):
+def get_url_base(url):
     parsed_uri = urlparse(url )
     result = '{uri.scheme}://{uri.netloc}'.format(uri=parsed_uri)
     return result
 
-def augmentURLWithSite(url,site,pref="http"):
+def augment_url_with_site(url, site, pref="http"):
     if pref not in url:
-        url=getURLBase(site)+("/" if url[0]!="/" else "") + url
+        url= get_url_base(site) + ("/" if url[0] != "/" else "") + url
     return url
 
 def get_links(url, extensions):
@@ -44,24 +44,24 @@ def get_links(url, extensions):
             pass
     return links
 
-def removePrefix(s, prefix):
+def remove_prefix(s, prefix):
     if s.startswith(prefix):
         return s[len(prefix):]
-    return s  
+    return s
 
-def listLinks(url, extension=[""]):
+def list_links(url, extension=[""]):
     for x in get_links(url,extension):
         print(x)
 
-def goThroughDirectory(pathRemoval,link, outputDir):
-    link=link.removePrefix(pathRemoval)
+def go_through_directory(pathRemoval, link, outputDir):
+    link=link.remove_prefix(pathRemoval)
     #while "\\" in link:
     #os.makedirs(path, exist_ok=True)
 
-def downloadLinks(links,pathRemoval, outputDir):
+def download_links(links, pathRemoval, outputDir):
         cpt=1
         for link in links:
-            link2=removePrefix(link,pathRemoval)
+            link2=remove_prefix(link, pathRemoval)
             dir=os.path.dirname(link2)
             newDir=outputDir+"\\"+dir
             fname=newDir+"\\"+os.path.basename(link2)
@@ -81,12 +81,12 @@ def downloadLinks(links,pathRemoval, outputDir):
             except:
                 print("!!! PROBLEM Creating ",fname)
 
-def downloadURLLinks(url, extensions,pathRemoval, outputDir):
+def download_url_links(url, extensions, pathRemoval, outputDir):
     links=get_links(url,extensions)
-    links = [augmentURLWithSite(x,url) for x in links]
-    downloadLinks(links,pathRemoval, outputDir)
+    links = [augment_url_with_site(x, url) for x in links]
+    download_links(links, pathRemoval, outputDir)
 
-def downloadNhanes(comp,year,type=1):
+def download_nhanes(comp, year, type=1):
  #  prefix="https://wwwn.cdc.gov"
    for y in year:
        for c in comp:
@@ -111,29 +111,29 @@ def downloadNhanes(comp,year,type=1):
                if (lXPT in links) or (lDAT in links) or (lSAS in links):
                    links.append(l)
            #links = [prefix + sub for sub in links]
-           links = [augmentURLWithSite(x,url) for x in links]
+           links = [augment_url_with_site(x, url) for x in links]
            random.shuffle(links)
-           downloadLinks(links, removal, "C:\Tmp\\")
+           download_links(links, removal, "C:\Tmp\\")
 
-def downloadNhanesB(comp,year):
+def download_nhanes_b(comp, year):
    for y in year:
        for c in comp:
-           downloadLinks("https://wwwn.cdc.gov/nchs/nhanes/ContinuousNhanes/"+c+".aspx?BeginYear="+y, [".XPT",".dat",".sas",".txt",".pdf",".doc"], "https://wwwn.cdc.gov/Nchs/data/", "C:\Tmp\\")
+           download_links("https://wwwn.cdc.gov/nchs/nhanes/ContinuousNhanes/" + c + ".aspx?BeginYear=" + y, [".XPT", ".dat", ".sas", ".txt", ".pdf", ".doc"], "https://wwwn.cdc.gov/Nchs/data/", "C:\Tmp\\")
 
-def downloadAllNhanes():
+def download_all_nhanes():
     #downloadNhanes(["Demographics"],["2017"]);
     #listLinks("https://wwwn.cdc.gov/nchs/nhanes/Search/DataPage.aspx?Component=Demographics&CycleBeginYear=2017")
 
-    downloadNhanes(["Demographics","Dietary","Examination","Laboratory","Questionnaire","Non-Public"],["2017","2015","2013","2011","2009","2007","2005","2003","2001","1999"])
-    downloadNhanes(["Questionnaires","labmethods","Manuals","Documents","overview","releasenotes","overviewlab","overviewquex","overviewexam"],["2017","2015","2013","2011","2009","2007","2005","2003","2001","1999"],type=2)
+    download_nhanes(["Demographics", "Dietary", "Examination", "Laboratory", "Questionnaire", "Non-Public"], ["2017", "2015", "2013", "2011", "2009", "2007", "2005", "2003", "2001", "1999"])
+    download_nhanes(["Questionnaires", "labmethods", "Manuals", "Documents", "overview", "releasenotes", "overviewlab", "overviewquex", "overviewexam"], ["2017", "2015", "2013", "2011", "2009", "2007", "2005", "2003", "2001", "1999"], type=2)
 
     #downloadNhanes(["Demographics","Dietary","Examination","Questionnaire","Non-Public"],["1999"]);
     #downloadNhanesB(["Questionnaires","LabMethods","Manuals","Documents","DocContents","OverviewLab","OverviewQuex","OverviewExam"],["1999"]);
     #downloadLinks("https://wwwn.cdc.gov/nchs/nhanes/nhanes3/DataFiles.aspx", [".xpt",".dat",".sas",".txt",".pdf",".doc"], "https://wwwn.cdc.gov/nchs/data", "E:\Ben\Research\Datasets\Life Science\\")
     #downloadLinks("https://www.cdc.gov/nchs/nhanes/nh3data.htm", [".xpt",".dat",".sas",".txt",".pdf"], "ftp://ftp.cdc.gov/pub/Health_Statistics/NCHS/nhanes","E:\Ben\Research\Datasets\Life Science\\")
-    
 
-def BrowseDirectoryTables(dir,extensions=[""]):
+
+def browse_directory_tables(dir, extensions=[""]):
     fNames=[]
     for root, dirs, files in os.walk(dir):
         for file in files:
@@ -144,7 +144,7 @@ def BrowseDirectoryTables(dir,extensions=[""]):
 
 
 
-def countElements(dir,attr=[""], all=False):
+def count_elements(dir, attr=[""], all=False):
     seqn=[]
     columns=[]
     cpt=0
@@ -183,7 +183,7 @@ def countElements(dir,attr=[""], all=False):
 
     return seqn,columns,totalSize,cpt
 
-def getElements(seqn, columns, dir, attr, nbFiles=0, all=False):
+def get_elements(seqn, columns, dir, attr, nbFiles=0, all=False):
     ls=len(seqn)
     lc=len(columns)
     data = np.empty((ls,lc))
@@ -215,8 +215,8 @@ def getElements(seqn, columns, dir, attr, nbFiles=0, all=False):
                                     #print('Error:',row[c],type(row[c]), c, fileName)
                                     pass
     return data
-                        
-def npToCSV(data,columns,dest='e:/nhanesTestVeryFast3.csv'):
+
+def np_to_csv(data, columns, dest='e:/nhanesTestVeryFast3.csv'):
     header=''
     for c in columns:
         header=header+c+', '
@@ -225,59 +225,59 @@ def npToCSV(data,columns,dest='e:/nhanesTestVeryFast3.csv'):
     np.savetxt(dest,data,header=header, delimiter=', ', comments='' )
     pass
 
-def npToPanda(data,columns):
+def np_to_pandas(data, columns):
     df=pd.DataFrame(data,columns=columns)
     return df
 
-def nhanesMergerNumpy(dir,attr=[""],dest='e:/nhanesF.csv',all=False):
-    seqn,columns,totalSize,nbFiles=countElements(dir,attr,all)
+def nhanes_merger_numpy(dir, attr=[""], dest='e:/nhanesF.csv', all=False):
+    seqn,columns,totalSize,nbFiles=count_elements(dir, attr, all)
     ls=len(seqn)
     lc=len(columns)
     print("===> Database filtering info:  ( nb Part",ls,') (nb Columns', lc,') (total file size (MBs)',totalSize/1024/1024,') (nb Files)',nbFiles)
-    data = getElements(seqn,columns,dir,attr,nbFiles,all)
+    data = get_elements(seqn, columns, dir, attr, nbFiles, all)
     #npToCSV(data,columns,dest)
-    df= npToPanda(data,columns)
+    df= np_to_pandas(data, columns)
     df.to_csv(dest)
     return df
 
-def loadCSV(name,ageMin=-1,ageMax=200):
+def load_csv(name, ageMin=-1, ageMax=200):
 
     df=pd.read_csv(name, low_memory=False)
     if 'RIDAGEYR' in df:
         l=[x and y for x, y in zip((df['RIDAGEYR']>=ageMin),(df['RIDAGEYR']<=ageMax))]
-        return df[l] 
+        return df[l]
     else:
        return df
 
-def KeepNonNull(df,col):
+def keep_non_null(df, col):
     l=(~df[col].isnull())
     return df[l]
 
-def KeepEqual(df,col,val):
+def keep_equal(df, col, val):
     l=(df[col]==val)
     return df[l]
 
-def KeepDifferent(df,col,val):
+def keep_different(df, col, val):
     l=(df[col]!=val)
     return df[l]
 
-def KeepGreaterThan(df,col,val):
+def keep_greater_than(df, col, val):
     l=(df[col]>val)
     return df[l]
 
-def KeepGreaterEqual(df,col,val):
+def keep_greater_equal(df, col, val):
     l=(df[col]>=val)
     return df[l]
 
-def KeepLowerThan(df,col,val):
+def keep_lower_than(df, col, val):
     l=(df[col]<val)
     return df[l]
 
-def KeepLowerEqual(df,col,val):
+def keep_lower_equal(df, col, val):
     l=(df[col]<=val)
     return df[l]
 
-def KeepColums(df, cols):
+def keep_columns(df, cols):
     return df[cols]
 
 
