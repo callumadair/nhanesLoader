@@ -1,39 +1,39 @@
-from bs4 import BeautifulSoup
 import sys
 import requests
 import os
-
 import numbers
 import math
 import bisect
-
-from nhanesVariables import tests
+from tqdm import tqdm
 import numpy as np
 import random
 import time
-from tqdm import tqdm
-from urllib.parse import urlparse
 import pandas as pd
 
+from bs4 import BeautifulSoup
+from requests import Response
+from urllib.parse import urlparse, ParseResult
+from nhanesVariables import tests
 
-def get_url_base(url):
-    parsed_uri = urlparse(url)
-    result = '{uri.scheme}://{uri.netloc}'.format(uri=parsed_uri)
+
+def get_url_base(url: str) -> str:
+    parsed_uri: ParseResult = urlparse(url)
+    result: str = '{uri.scheme}://{uri.netloc}'.format(uri=parsed_uri)
     return result
 
 
-def augment_url_with_site(url, site, pref="http"):
+def augment_url_with_site(url: str, site: str, pref: str = "http") -> str:
     if pref not in url:
         url = get_url_base(site) + ("/" if url[0] != "/" else "") + url
     return url
 
 
-def get_links(url, extensions):
-    r = requests.get(url)
-    contents = r.content
+def get_links(url: str, extensions: [str]) -> []:
+    r: Response = requests.get(url)
+    contents: bytes = r.content
 
     soup = BeautifulSoup(contents, "lxml")
-    links = []
+    links: [] = []
     for link in soup.findAll('a'):
         try:
             for extension in extensions:
@@ -44,35 +44,36 @@ def get_links(url, extensions):
     return links
 
 
-def remove_prefix(s, prefix):
+def remove_prefix(s: str, prefix: str) -> str:
     if s.startswith(prefix):
         return s[len(prefix):]
     return s
 
 
-def list_links(url, extension=[""]):
+def list_links(url: str, extension: [] = [""]) -> None:
     for x in get_links(url, extension):
         print(x)
 
 
-def go_through_directory(pathRemoval, link, outputDir):
-    link = link.remove_prefix(pathRemoval)
+# maybe link is str and should be removeprefix
+def go_through_directory(path_removal: str, link, output_dir: str) -> None:
+    link = link.remove_prefix(path_removal)
     # while "\\" in link:
     # os.makedirs(path, exist_ok=True)
 
 
-def download_links(links, pathRemoval, outputDir):
+def download_links(links: [], path_removal: str, output_dir: str) -> None:
     cpt = 1
     for link in links:
-        link2 = remove_prefix(link, pathRemoval)
-        dir = os.path.dirname(link2)
-        newDir = outputDir + "\\" + dir
-        fname = newDir + "\\" + os.path.basename(link2)
+        link2 = remove_prefix(link, path_removal)
+        cur_dir = os.path.dirname(link2)
+        new_dir = output_dir + "\\" + cur_dir
+        fname = new_dir + "\\" + os.path.basename(link2)
         print(link)
         print("file ", cpt, " / ", len(links), " (" + fname + ")")
-        cpt = cpt + 1
+        cpt += 1
         try:
-            os.makedirs(newDir, exist_ok=True)
+            os.makedirs(new_dir, exist_ok=True)
             if not os.path.isfile(fname):
                 response = requests.get(link, stream=True)
                 with open(fname, "wb") as handle:
@@ -85,13 +86,13 @@ def download_links(links, pathRemoval, outputDir):
             print("!!! PROBLEM Creating ", fname)
 
 
-def download_url_links(url, extensions, pathRemoval, outputDir):
-    links = get_links(url, extensions)
+def download_url_links(url: str, extensions: [], path_removal: str, output_dir: str) -> None:
+    links: [] = get_links(url, extensions)
     links = [augment_url_with_site(x, url) for x in links]
-    download_links(links, pathRemoval, outputDir)
+    download_links(links, path_removal, output_dir)
 
 
-def download_nhanes(comp, year, type=1):
+def download_nhanes(comp, year, type=1) -> None:
     #  prefix="https://wwwn.cdc.gov"
     for y in year:
         for c in comp:
