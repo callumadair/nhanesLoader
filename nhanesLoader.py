@@ -4,12 +4,13 @@ import os
 import numbers
 import math
 import bisect
-from tqdm import tqdm
 import numpy as np
 import random
 import time
 import pandas as pd
 
+from numpy import NAN
+from tqdm import tqdm
 from bs4 import BeautifulSoup
 from requests import Response
 from urllib.parse import urlparse, ParseResult
@@ -92,14 +93,14 @@ def download_url_links(url: str, extensions: [], path_removal: str, output_dir: 
     download_links(links, path_removal, output_dir)
 
 
-def download_nhanes(comp, year, type=1) -> None:
+def download_nhanes(comp: [], years: [], url_type: int = 1) -> None:
     #  prefix="https://wwwn.cdc.gov"
-    for y in year:
+    for y in years:
         for c in comp:
             print()
             print(
                 "======================================================================================================================")
-            if (type == 1):
+            if url_type == 1:
                 url = "https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component=" + c + "&CycleBeginYear=" + y
                 removal = "https://wwwn.cdc.gov/Nchs/"
             else:
@@ -109,29 +110,29 @@ def download_nhanes(comp, year, type=1) -> None:
             print("")
             types = [".XPT", ".dat", ".sas", ".txt", ".pdf", ".doc"];
             links = get_links(url, [".XPT", ".dat", ".sas", ".txt", ".pdf", ".doc"])
-            linksHtm = get_links(url, [".htm"])
-            for l in linksHtm:
-                pre, ext = os.path.splitext(l)
-                lXPT = pre + ".XPT"
-                lDAT = pre + ".dat"
-                lSAS = pre + ".sas"
-                if (lXPT in links) or (lDAT in links) or (lSAS in links):
-                    links.append(l)
+            links_htm = get_links(url, [".htm"])
+            for link in links_htm:
+                pre, ext = os.path.splitext(link)
+                link_xpt = pre + ".XPT"
+                link_dat = pre + ".dat"
+                link_sas = pre + ".sas"
+                if (link_xpt in links) or (link_dat in links) or (link_sas in links):
+                    links.append(link)
             # links = [prefix + sub for sub in links]
             links = [augment_url_with_site(x, url) for x in links]
             random.shuffle(links)
             download_links(links, removal, "C:\Tmp\\")
 
 
-def download_nhanes_b(comp, year):
-    for y in year:
+def download_nhanes_b(comp: [], years: []) -> None:
+    for year in years:
         for c in comp:
-            download_links("https://wwwn.cdc.gov/nchs/nhanes/ContinuousNhanes/" + c + ".aspx?BeginYear=" + y,
+            download_links("https://wwwn.cdc.gov/nchs/nhanes/ContinuousNhanes/" + c + ".aspx?BeginYear=" + year,
                            [".XPT", ".dat", ".sas", ".txt", ".pdf", ".doc"], "https://wwwn.cdc.gov/Nchs/data/",
                            "C:\Tmp\\")
 
 
-def download_all_nhanes():
+def download_all_nhanes() -> None:
     # downloadNhanes(["Demographics"],["2017"]);
     # listLinks("https://wwwn.cdc.gov/nchs/nhanes/Search/DataPage.aspx?Component=Demographics&CycleBeginYear=2017")
 
@@ -139,7 +140,7 @@ def download_all_nhanes():
                     ["2017", "2015", "2013", "2011", "2009", "2007", "2005", "2003", "2001", "1999"])
     download_nhanes(["Questionnaires", "labmethods", "Manuals", "Documents", "overview", "releasenotes", "overviewlab",
                      "overviewquex", "overviewexam"],
-                    ["2017", "2015", "2013", "2011", "2009", "2007", "2005", "2003", "2001", "1999"], type=2)
+                    ["2017", "2015", "2013", "2011", "2009", "2007", "2005", "2003", "2001", "1999"], url_type=2)
 
     # downloadNhanes(["Demographics","Dietary","Examination","Questionnaire","Non-Public"],["1999"]);
     # downloadNhanesB(["Questionnaires","LabMethods","Manuals","Documents","DocContents","OverviewLab","OverviewQuex","OverviewExam"],["1999"]);
@@ -147,24 +148,24 @@ def download_all_nhanes():
     # downloadLinks("https://www.cdc.gov/nchs/nhanes/nh3data.htm", [".xpt",".dat",".sas",".txt",".pdf"], "ftp://ftp.cdc.gov/pub/Health_Statistics/NCHS/nhanes","E:\Ben\Research\Datasets\Life Science\\")
 
 
-def browse_directory_tables(dir, extensions=[""]):
-    fNames = []
-    for root, dirs, files in os.walk(dir):
+def browse_directory_tables(directory: str, extensions=[""]) -> [str]:
+    file_names: [str] = []
+    for root, dirs, files in os.walk(directory):
         for file in files:
             for ext in extensions:
                 if ext in file:
-                    fNames.append(os.path.join(root, file))
-    return fNames
+                    file_names.append(os.path.join(root, file))
+    return file_names
 
 
-def count_elements(dir, attr=[""], all=False):
-    seqn = []
+def count_elements(directory: str, attr=[""], all: bool = False) -> ([], [], int, int):
+    sequence = []
     columns = []
     cpt = 0
-    totalSize = 0
+    total_size = 0
 
-    notIncluded = []
-    for root, dirs, files in os.walk(dir):
+    not_included = []
+    for root, dirs, files in os.walk(directory):
         for file in files:
             if ".XPT" in file:
                 found = False
@@ -173,38 +174,38 @@ def count_elements(dir, attr=[""], all=False):
                         if a in file:
                             found = True
                 if (not found) and (not all):
-                    notIncluded.append(file)
+                    not_included.append(file)
                 else:
                     fileName = os.path.join(root, file)
                     print('Opening file', fileName)
                     df = pd.read_sas(fileName)
                     if 'SEQN' in df:
-                        totalSize = totalSize + os.path.getsize(fileName)
+                        total_size = total_size + os.path.getsize(fileName)
                         cpt = cpt + 1
                         for c in list(df):
                             columns.append(c)
                         for s in df['SEQN'].values:
-                            seqn.append(s)
+                            sequence.append(s)
                     else:
-                        notIncluded.append(file)
+                        not_included.append(file)
     print("========================= Not included: ====================================")
-    print(notIncluded)
+    print(not_included)
     columns = list(dict.fromkeys(columns))
-    seqn = list(dict.fromkeys(seqn))
+    sequence = list(dict.fromkeys(sequence))
     columns.sort()
-    seqn.sort()
+    sequence.sort()
 
-    return seqn, columns, totalSize, cpt
+    return sequence, columns, total_size, cpt
 
 
-def get_elements(seqn, columns, dir, attr, nbFiles=0, all=False):
-    ls = len(seqn)
+def get_elements(sequence: [], columns: [], directory: str, attr, num_files: int = 0, all: bool = False) -> NAN:
+    ls = len(sequence)
     lc = len(columns)
     data = np.empty((ls, lc))
     data[:] = np.NaN
     print("Loading Files")
     cpt = 0
-    for root, dirs, files in os.walk(dir):
+    for root, dirs, files in os.walk(directory):
         for file in files:
             if ".XPT" in file:
                 found = False
@@ -213,15 +214,15 @@ def get_elements(seqn, columns, dir, attr, nbFiles=0, all=False):
                         if a in file:
                             found = True
                 if all or found:
-                    fileName = os.path.join(root, file)
-                    df = pd.read_sas(fileName)
-                    allColumns = list(dict.fromkeys(list(df)))
-                    if 'SEQN' in allColumns:
-                        print('Reading file  ', cpt, "/", nbFiles, fileName)
+                    file_name: str = os.path.join(root, file)
+                    df = pd.read_sas(file_name)
+                    all_columns: [str] = list(dict.fromkeys(list(df)))
+                    if 'SEQN' in all_columns:
+                        print('Reading file  ', cpt, "/", num_files, file_name)
                         cpt = cpt + 1
                         for index, row in df.iterrows():
-                            sIndex = bisect.bisect_left(seqn, row['SEQN'])
-                            for c in allColumns:
+                            sIndex = bisect.bisect_left(sequence, row['SEQN'])
+                            for c in all_columns:
                                 try:
                                     cIndex = bisect.bisect_left(columns, c)
                                     data[sIndex][cIndex] = row[c]
@@ -231,7 +232,7 @@ def get_elements(seqn, columns, dir, attr, nbFiles=0, all=False):
     return data
 
 
-def np_to_csv(data, columns, dest='e:/nhanesTestVeryFast3.csv'):
+def np_to_csv(data, columns: [], dest: str = 'e:/nhanesTestVeryFast3.csv'):
     header = ''
     for c in columns:
         header = header + c + ', '
