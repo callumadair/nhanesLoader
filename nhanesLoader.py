@@ -10,6 +10,7 @@ import time
 import pandas as pd
 
 from numpy import NAN
+from pandas import DataFrame
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 from requests import Response
@@ -69,22 +70,22 @@ def download_links(links: [], path_removal: str, output_dir: str) -> None:
         link2 = remove_prefix(link, path_removal)
         cur_dir = os.path.dirname(link2)
         new_dir = output_dir + "\\" + cur_dir
-        fname = new_dir + "\\" + os.path.basename(link2)
+        file_name = new_dir + "\\" + os.path.basename(link2)
         print(link)
-        print("file ", cpt, " / ", len(links), " (" + fname + ")")
+        print("file ", cpt, " / ", len(links), " (" + file_name + ")")
         cpt += 1
         try:
             os.makedirs(new_dir, exist_ok=True)
-            if not os.path.isfile(fname):
+            if not os.path.isfile(file_name):
                 response = requests.get(link, stream=True)
-                with open(fname, "wb") as handle:
+                with open(file_name, "wb") as handle:
                     for data in tqdm(response.iter_content()):
                         handle.write(data)
                     handle.close()
             else:
                 print("Skipped file as already created")
         except:
-            print("!!! PROBLEM Creating ", fname)
+            print("!!! PROBLEM Creating ", file_name)
 
 
 def download_url_links(url: str, extensions: [], path_removal: str, output_dir: str) -> None:
@@ -232,7 +233,7 @@ def get_elements(sequence: [], columns: [], directory: str, attr, num_files: int
     return data
 
 
-def np_to_csv(data, columns: [], dest: str = 'e:/nhanesTestVeryFast3.csv'):
+def np_to_csv(data, columns: [], dest: str = 'e:/nhanesTestVeryFast3.csv') -> None:
     header = ''
     for c in columns:
         header = header + c + ', '
@@ -242,21 +243,21 @@ def np_to_csv(data, columns: [], dest: str = 'e:/nhanesTestVeryFast3.csv'):
     pass
 
 
-def np_to_pandas(data, columns):
+def np_to_pandas(data, columns) -> DataFrame:
     df = pd.DataFrame(data, columns=columns)
     return df
 
 
-def nhanes_merger_numpy(dir, attr=[""], dest='e:/nhanesF.csv', all=False):
-    seqn, columns, totalSize, nbFiles = count_elements(dir, attr, all)
-    ls = len(seqn)
+def nhanes_merger_numpy(directory: str, attr=[""], destination: str = 'e:/nhanesF.csv', all: bool = False):
+    sequence, columns, total_size, num_files = count_elements(directory, attr, all)
+    ls = len(sequence)
     lc = len(columns)
     print("===> Database filtering info:  ( nb Part", ls, ') (nb Columns', lc, ') (total file size (MBs)',
-          totalSize / 1024 / 1024, ') (nb Files)', nbFiles)
-    data = get_elements(seqn, columns, dir, attr, nbFiles, all)
+          total_size / 1024 / 1024, ') (nb Files)', num_files)
+    data = get_elements(sequence, columns, directory, attr, num_files, all)
     # npToCSV(data,columns,dest)
     df = np_to_pandas(data, columns)
-    df.to_csv(dest)
+    df.to_csv(destination)
     return df
 
 
